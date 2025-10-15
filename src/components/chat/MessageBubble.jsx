@@ -422,13 +422,12 @@ export default function MessageBubble({ message }) {
               {isUser ? (
                 <p className="text-sm leading-relaxed">{message.content}</p>
               ) : (
-                <ReactMarkdown
-                  // Merged existing assistant-specific prose classes with new generic text-sm and margin utilities
-                  className={cn(
-                    "prose prose-sm max-w-none text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-                    'prose-invert' // All assistants now use invert since they all have dark backgrounds
-                  )}
-                  components={{
+                <div className={cn(
+                  "prose prose-sm max-w-none text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+                  'prose-invert'
+                )}>
+                  <ReactMarkdown
+                    components={{
                     h1: ({ children }) => <h1 className="text-xl font-bold mb-3">{children}</h1>,
                     h2: ({ children }) => <h2 className="text-lg font-semibold my-3">{children}</h2>,
                     h3: ({ children }) => <h3 className="text-base font-semibold my-2">{children}</h3>,
@@ -467,10 +466,11 @@ export default function MessageBubble({ message }) {
                         </code>
                       );
                     }
-                  }}
-                >
-                  {message.content}
-                </ReactMarkdown>
+                    }}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                </div>
               )}
             </div>
           )}

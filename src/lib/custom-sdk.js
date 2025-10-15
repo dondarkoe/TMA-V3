@@ -675,6 +675,32 @@ export class UserEntity extends CustomEntity {
  * @returns {string} Table name in snake_case
  */
 function entityNameToTableName(entityName) {
+  const specialCases = {
+    'Conversation': 'conversations',
+    'Analysis': 'analyses',
+    'MixComparison': 'mix_comparisons',
+    'MixComparisons': 'mix_comparisons',
+    'AudioFile': 'audio_files',
+    'ChatSession': 'chat_sessions',
+    'ChatMessage': 'chat_messages',
+    'KoeLabSession': 'koe_lab_sessions',
+    'ArkProfile': 'ark_profiles',
+    'ShotlistItem': 'shotlist_items',
+    'UserShotlist': 'user_shotlists',
+    'ContentIdea': 'content_ideas',
+    'ArtistProductionStyle': 'artist_production_styles',
+    'SoundRecipe': 'sound_recipes',
+    'SavedProgression': 'saved_progressions',
+    'UserBrainDumpEntry': 'user_brain_dump_entries',
+    'BrainDumpInsight': 'brain_dump_insights',
+    'AIAssistant': 'ai_assistants',
+    'GlobalAIConfig': 'global_ai_configs',
+  };
+
+  if (specialCases[entityName]) {
+    return specialCases[entityName];
+  }
+
   return entityName
     .replace(/([A-Z])/g, "_$1")
     .toLowerCase()
@@ -748,20 +774,50 @@ function createEntitiesProxy() {
 }
 
 /**
+ * Create a dynamic functions proxy that returns placeholder functions
+ */
+function createFunctionsProxy() {
+  const functionsCache = new Map();
+
+  return new Proxy(
+    {},
+    {
+      get(_, functionName) {
+        if (typeof functionName !== "string") return undefined;
+
+        if (functionsCache.has(functionName)) {
+          return functionsCache.get(functionName);
+        }
+
+        const placeholderFunction = async (...args) => {
+          console.warn(`Function ${functionName} is not yet implemented. This is a placeholder.`);
+          console.log(`Called with args:`, args);
+          throw new Error(`${functionName} is not available. Please configure Base44 functions.`);
+        };
+
+        functionsCache.set(functionName, placeholderFunction);
+        return placeholderFunction;
+      },
+
+      has(_, functionName) {
+        return typeof functionName === "string";
+      },
+
+      ownKeys() {
+        return Array.from(functionsCache.keys());
+      },
+    }
+  );
+}
+
+/**
  * Create custom client that mimics Base44 SDK structure
  */
 export function createCustomClient() {
   return {
     entities: createEntitiesProxy(),
     auth: new UserEntity(),
-    functions: {
-      // Placeholder functions that can be implemented later
-      verifyHcaptcha: async () => {
-        // TODO: Implement hCaptcha verification
-        console.warn("verifyHcaptcha not yet implemented");
-        return { success: true };
-      },
-    },
+    functions: createFunctionsProxy(),
     integrations: {
       Core: {
         InvokeLLM: async ({
